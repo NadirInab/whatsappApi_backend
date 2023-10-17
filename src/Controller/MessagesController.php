@@ -36,7 +36,7 @@ class MessagesController extends AbstractController
         ];
 
         $apiEndpoint = 'https://graph.facebook.com/v17.0/100206783144220/messages';
-        $accessToken = 'EAACP9wBzdvEBOxk9zdpKnOtqBnWUYXZBnJYZAfoX1V6O0ZAZB6vK1SETCCeyhgETfTEbN0hb9XZCsEt4HNn1wd5Yg9FJhrNctkIigZBNUli9uMBNuVEZBcZA8Y9eg9E9qRN76xSgtvg5zHssb9cjh77KMlkFykFLATFDS05IivRyUIZA8TRNJsKafUud0YNGZB7Lp98RUG3wzn79uex1uFbTFq1pQ7MvsZD';  // Replace with your Meta API access token
+        $accessToken = 'EAACP9wBzdvEBO12VIoWcDBtwsYtSKIdhH9ZAisGZCKg1KQzLCWv3gfTZB2ZAUXi63A5BKSUKmBOd6S12IiC3A6kbUGajZCNAz2s4GxBz3srCZCCSDLIjSoitP9r417GqtTVdZBCHxWZCm3c38FC7yqTOjaassSuc96owWM9uyu0RbUsMZCA0R85iq4lAWelF0Mf7dty6nsY1NkYi2hbZAeJNoCeZAVcBEG9PAZDZD';  // Replace with your Meta API access token
 
         try {
             $client = HttpClient::create();
@@ -49,16 +49,13 @@ class MessagesController extends AbstractController
                 'json' => $payload,
             ]);
 
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode === 200) {
-                return $this->json(['message' => 'Message sent to WhatsApp!', 'recipient' => $payload['to']]);
-            } else {
-                return $this->json(['error' => 'Error sending message: ' . $response->getContent()], $statusCode);
-            }
+            $whatsappResponseContent = $response->getContent();
+            return new JsonResponse($whatsappResponseContent, 200, [
+                'Content-Type' => 'application/json',
+                'Access-Control-Allow-Origin' => 'http://127.0.0.1:5173/', 
+            ]);
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error sending message: ' . $e->getMessage()], 500);
         }
     }
-
 }
