@@ -50,10 +50,13 @@ class MessagesController extends AbstractController
             ]);
 
             $whatsappResponseContent = $response->getContent();
-            return new JsonResponse($whatsappResponseContent, 200, [
+            $response = new JsonResponse($whatsappResponseContent, 200, [
                 'Content-Type' => 'application/json',
-                'Access-Control-Allow-Origin' => 'http://127.0.0.1:5173/', 
             ]);
+
+            $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000'); // http://127.0.0.1:8000
+
+            return $response;
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error sending message: ' . $e->getMessage()], 500);
         }
