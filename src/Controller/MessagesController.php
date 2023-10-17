@@ -35,8 +35,8 @@ class MessagesController extends AbstractController
             ]
         ];
 
-        $apiEndpoint = 'https://graph.facebook.com/v17.0/100206783144220/messages';
-        $accessToken = 'EAACP9wBzdvEBO12VIoWcDBtwsYtSKIdhH9ZAisGZCKg1KQzLCWv3gfTZB2ZAUXi63A5BKSUKmBOd6S12IiC3A6kbUGajZCNAz2s4GxBz3srCZCCSDLIjSoitP9r417GqtTVdZBCHxWZCm3c38FC7yqTOjaassSuc96owWM9uyu0RbUsMZCA0R85iq4lAWelF0Mf7dty6nsY1NkYi2hbZAeJNoCeZAVcBEG9PAZDZD';  // Replace with your Meta API access token
+        $apiEndpoint = $_ENV('META_END_POINT');
+        $accessToken = $_ENV('META_API_TOKEN'); 
 
         try {
             $client = HttpClient::create();
@@ -54,7 +54,7 @@ class MessagesController extends AbstractController
                 'Content-Type' => 'application/json',
             ]);
 
-            $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000'); // http://127.0.0.1:8000
+            $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
 
             return $response;
         } catch (\Exception $e) {
