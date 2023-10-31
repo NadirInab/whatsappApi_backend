@@ -1,0 +1,2 @@
+mercure:
+	./bin/mercure --jwt-key='universe' --addr='localhost:3000' --cors-allowed-origins='*'
