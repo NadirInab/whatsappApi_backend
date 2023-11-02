@@ -7,11 +7,9 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Mercure\HubInterface;
-use Symfony\Component\Mercure\Update;
-
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MessagesController extends AbstractController
 {
@@ -45,7 +43,7 @@ class MessagesController extends AbstractController
             ]
         ];
         $apiEndpoint =  "https://graph.facebook.com/v17.0/100206783144220/messages";
-        $accessToken = "EAACP9wBzdvEBOZB1iwDL7HmjOAkD1gb6ZAxjemglalOe1q0Rh7UHXtNXnbgzaAI1E0H2no1OuFWBUVqzbvG6B6zj9gdwO67AWC1g7HM9f07EwFTwuQNyRhnWXzZA5O4puOqtVlowgRP53MD4RLunzbKzUuyuMwXW0udhn2k2jfUXuv364cBTjNfVD8GugDW7FnyjBOb3Nfz5kJVoPS6AMMtVZBsZD";
+        $accessToken = "EAACP9wBzdvEBO7lsZBHHWMY94AomUroQi1vpeX9L9DEGwVhklbpbllMUbZBmfGvQuOthXXBjYMBvQ2ZBQxyp2q5kNRdHnS3q7X5BZBe7mqt9UQXZBzLtt6fpElR4GJH9CTKtqaLPVcWWlj8KGqNBNGddxZBDnMQeNfqXI1nUZCYJ3F2vDZAK93gFFzsrtHpVZBKEff7vzhJpbMTGTgAVQUuPEKPbvh6IZD";
 
         try {
             $client = HttpClient::create();
@@ -57,6 +55,7 @@ class MessagesController extends AbstractController
                 ],
                 'json' => $payload,
             ]);
+
             $whatsappResponseContent = json_decode($response->getContent(), true);
 
             return new JsonResponse($whatsappResponseContent, 200, [
@@ -90,116 +89,83 @@ class MessagesController extends AbstractController
 
 
     #[Route('/api/webhooks', methods: ['GET', 'POST'])]
-    public function getMessageResponse(Request $request, HubInterface $hub): JsonResponse
+    public function getMessageResponse(Request $request): StreamedResponse
     {
 
         $jsonContent = $request->getContent();
         $data = json_decode($jsonContent, true);
+        
         error_log("Received WhatsApp Data Here !!!! :====>  " . print_r($data, true));
+        error_log("==================================> start ");
+         if (array_key_exists('messages', $data)) {
+            $messagesData = $data['messages'][0];
+            $responseData = [
+                'object' => $data['object'],
+                'id' => $data['entry'][0]['id'],
+                'messagingProduct' => $messagesData['value']['messaging_product'],
+                'displayPhoneNumber' => $messagesData['value']['metadata']['display_phone_number'],
+                'phoneNumberId' => $messagesData['value']['metadata']['phone_number_id'],
+                'name' => $messagesData['value']['contacts'][0]['profile']['name'],
+                'waId' => $messagesData['value']['contacts'][0]['wa_id'],
+                'from' => $messagesData['value']['messages'][0]['from'],
+                'messageId' => $messagesData['value']['messages'][0]['id'],
+                'timestamp' => date('m/d/Y H:i:s', $messagesData['value']['messages'][0]['timestamp']),
+                'messageText' => $messagesData['value']['messages'][0]['text']['body'],
+                'messageType' => $messagesData['value']['messages'][0]['type'],
+            ];
+    
+            // Extract data from the second array structure
+            $object2 = $data['entry'][0]['changes'][0]['value']['messaging_product'];
+            $displayPhoneNumber2 = $data['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
+            $phoneNumberId2 = $data['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
+            $status2 = $data['entry'][0]['changes'][0]['value']['statuses'][0]['status'];
+            $timestamp2 = date('m/d/Y H:i:s', $data['entry'][0]['changes'][0]['value']['statuses'][0]['timestamp']);
+    
+            // Combine data from both structures into one response
+            $responseData['object2'] = $data['object'];
+            $responseData['messagingProduct2'] = $object2;
+            $responseData['displayPhoneNumber2'] = $displayPhoneNumber2;
+            $responseData['phoneNumberId2'] = $phoneNumberId2;
+            $responseData['status2'] = $status2;
+            $responseData['timestamp2'] = $timestamp2;
+    
+            return $this->sse($responseData);
+        } else {
+            $message = "This is a streamed message.";
 
-        // if (!isset($data['messages'])) {
-        //     error_log("Received WhatsApp Data Here !!!! :====>  " . print_r($data, true));    
+            $callback = function () use ($message) {
+                echo $message;
+            };
+        
+            $response = new StreamedResponse($callback);
+            $response->headers->set('Content-Type', 'text/plain');
+            $response->headers->set('Content-Disposition', 'inline; filename="message.txt"');
+        
+            return $response;
+        }
+    }
 
-        //     error_log("===========================> !!");
+    public function sse($data): StreamedResponse
+    {
+        $response = new StreamedResponse() ;
+        $response->headers->set('Content-Type', 'text/event-stream');
+        $response->headers->set('Cache-Control', 'no-cache');
+        $response->headers->set('Connection', 'keep-alive');
+        $data = $data ;
+        $callback = function() use ($data)  {
+            while (true) {
+                $responseData = [
+                    'message' => $data,
+                    'timestamp' => time(),
+                ];
+                echo "data: " . json_encode($responseData) . "\n\n";
+                ob_flush();
+                flush();
+                sleep(1); 
+            }
+        };
 
-        //     $object = $data['object'];
-        //     $entry = $data['entry'][0];
-        //     $id = $entry['id'];
-
-        //     if (isset($entry['changes'][0])) {
-        //         $changes = $entry['changes'][0];
-        //         $value = $changes['value'];
-
-        //         if (isset($value['messaging_product'])) {
-        //             $messagingProduct = $value['messaging_product'];
-
-        //             if (isset($value['metadata'])) {
-        //                 $metadata = $value['metadata'];
-
-        //                 if (isset($metadata['display_phone_number'])) {
-        //                     $displayPhoneNumber = $metadata['display_phone_number'];
-        //                 }
-        //                 if (isset($metadata['phone_number_id'])) {
-        //                     $phoneNumberId = $metadata['phone_number_id'];
-        //                 }
-        //             }
-
-        //             if (isset($value['contacts'][0])) {
-        //                 $contacts = $value['contacts'][0];
-
-        //                 if (isset($contacts['profile'])) {
-        //                     $profile = $contacts['profile'];
-
-        //                     if (isset($profile['name'])) {
-        //                         $name = "Nadir";
-        //                     }
-        //                 }
-
-        //                 if (isset($contacts['wa_id'])) {
-        //                     $waId = $contacts['wa_id'];
-        //                 }
-        //             }
-
-        //             if (isset($value['messages'][0])) {
-        //                 $messages = $value['messages'][0];
-
-        //                 if (isset($messages['from'])) {
-        //                     $from = $messages['from'];
-        //                 }
-        //                 if (isset($messages['id'])) {
-        //                     $id = $messages['id'];
-        //                 }
-        //                 if (isset($messages['timestamp'])) {
-        //                     $timestamp = date('m/d/Y H:i:s', $messages['timestamp']);
-        //                 }
-        //                 if (isset($messages['text']) && isset($messages['text']['body'])) {
-        //                     $text = $messages['text'];
-        //                     $body = $text['body'];
-        //                 }
-        //                 if (isset($messages['type'])) {
-        //                     $type = $messages['type'];
-        //                 }
-        //             }
-        //         }
-        //     }}
-
-        // $responseData = [
-        //     'object' => $object,
-        //     'id' => $id,
-        //     'messagingProduct' => $messagingProduct,
-        //     'displayPhoneNumber' => $displayPhoneNumber,
-        //     'phoneNumberId' => $phoneNumberId,
-        //     'name' => $name,
-        //     'waId' => $waId,
-        //     'from' => $from,
-        //     'messageId' => $id,
-        //     'timestamp' => $timestamp,
-        //     'messageText' => $body,
-        //     'messageType' => $type,
-        // ];
-
-        $responseData = [
-            'object' => "nadir",
-            'id' => 1234,
-            'messagingProduct' => "whatsapp",
-            'displayPhoneNumber' => "212636740837",
-            'phoneNumberId' => 1234,
-            'name' => "nadir",
-            'waId' => 1233,
-            'from' => "test",
-            'messageId' => 1234,
-            'timestamp' => 123456787,
-            'messageText' => "message seconde!!",
-            'messageType' => "type",
-        ];
-
-        $update = new Update(
-            'http://127.0.0.1:5173/',
-            json_encode(['status' => 'Here we are !!!'])
-        );
-
-        $hub->publish($update);
-
-        return new JsonResponse('published!');
+        $response->setCallback($callback);
+        return $response;
     }
 }

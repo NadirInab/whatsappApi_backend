@@ -5,10 +5,10 @@ services:
     image: dunglas/mercure
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "3000:8000"
     environment:
       SERVER_NAME: ':80'
-      MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_PUBLISHER_JWT_KEY: 'universe'
       MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
       MERCURE_EXTRA_DIRECTIVES: |
         cors_origins *

@@ -22,8 +22,7 @@ class SSEController extends AbstractController
         $response->sendHeaders();
 
         while ($request) {
-            // Listen for new messages from WhatsApp and send them to the client
-            $messages = []; // Get the new messages from WhatsApp
+            $messages = [];
 
             foreach ($messages as $message) {
                 $response->setContent('event: message' . PHP_EOL . 'data: ' . json_encode($message) . PHP_EOL . PHP_EOL);
