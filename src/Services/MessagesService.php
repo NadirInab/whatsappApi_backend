@@ -24,8 +24,8 @@ class MessagesService {
                 'body' => $data['text']['body']
             ]
         ];
-        $apiEndpoint =  "https://graph.facebook.com/v17.0/100206783144220/messages";
-        $accessToken = "EAACP9wBzdvEBO7lsZBHHWMY94AomUroQi1vpeX9L9DEGwVhklbpbllMUbZBmfGvQuOthXXBjYMBvQ2ZBQxyp2q5kNRdHnS3q7X5BZBe7mqt9UQXZBzLtt6fpElR4GJH9CTKtqaLPVcWWlj8KGqNBNGddxZBDnMQeNfqXI1nUZCYJ3F2vDZAK93gFFzsrtHpVZBKEff7vzhJpbMTGTgAVQUuPEKPbvh6IZD";
+        $apiEndpoint =  "https://graph.facebook.com/v17.0/123/messages"; //
+        $accessToken = "token"; 
 
         try {
             $client = HttpClient::create();
